@@ -29,7 +29,8 @@ class TicketStore(object):
             else:
                 query.append('max=0')
             tickets.extend(proxy.ticket.queryWithDetails('&'.join(query)))
-        return tickets
+        cr_ids = [cr.id for cr in project.customer_requests if cr.workflow_state != 'invoiced']
+        return [t for t in tickets if t['cr'] in cr_ids]
 
     def get_tickets_for_request(self, customer_request, limit=None, request=None):
         cr = customer_request
