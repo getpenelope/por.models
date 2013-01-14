@@ -522,12 +522,21 @@ def default_app_position(mapper, connection, target):
 
 
 def create_initial_application_acl(mapper, connection, target):
-    acl_rules = [
-                ('internal_developer', 'view'),
-                ('external_developer', 'view'),
-                ('secretary', 'view'),
-                ('secretary', 'edit'),
-                ]
+    if target.application_type == SVN:
+        acl_rules = [
+                    ('internal_developer', 'edit'),
+                    ('internal_developer', 'view'),
+                    ('external_developer', 'edit'),
+                    ('external_developer', 'view'),
+                    ]
+    else:
+        acl_rules = [
+                    ('internal_developer', 'view'),
+                    ('external_developer', 'view'),
+                    ('secretary', 'view'),
+                    ('secretary', 'edit'),
+                    ]
+
     if target.application_type == 'trac':
         acl_rules.append(('customer', 'view'))
 
