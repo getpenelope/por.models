@@ -47,5 +47,6 @@ setup(name='por.models',
       [console_scripts]
       populate_penelope = por.models.scripts.populate:main
       populate_with_dummies = por.models.scripts.dummies:main
+      import_svn = por.models.scripts.importsvn:main
       """,
       )
