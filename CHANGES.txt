@@ -4,3 +4,4 @@
 - move to github [amleczko]
 - user can select only tickets within those that have an open invoice [massimoazzolini]
 - update models for karma integration [amleczko]
+- fixes for the subversion integration [amleczko]
