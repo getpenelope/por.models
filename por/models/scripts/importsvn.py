@@ -39,7 +39,7 @@ def main(argv=sys.argv):
         session = DBSession()
         with open(svn_csv, 'rb') as csvfile:
             reader = csv.reader(csvfile)
-            for svn_repo, project_id in reader:
+            for project_id, svn_repo in reader:
                 svn_repo = svn_repo.strip()
                 project_id = project_id.strip()
                 project = session.query(Project).get(project_id)
