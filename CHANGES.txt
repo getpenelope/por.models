@@ -1,5 +1,5 @@
-1.3.9 (unreleased)
---------------------
+1.3.9 (2013-01-30)
+------------------
 
 - move to github [amleczko]
 - user can select only tickets within those that have an open invoice [massimoazzolini]
