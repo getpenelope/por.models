@@ -28,7 +28,7 @@ if sys.version_info[:3] < (2, 5, 0):
 
 setup(name='por.models',
       version='1.3.10.dev0',
-      description='Tempi progetti',
+      description='SQLAlchemy models for Penelope',
       long_description=README + '\n\n' + CHANGES,
       classifiers=[
         "Programming Language :: Python",
