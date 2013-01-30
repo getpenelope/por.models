@@ -27,7 +27,7 @@ if sys.version_info[:3] < (2, 5, 0):
     requires.append('pysqlite')
 
 setup(name='por.models',
-      version='1.3.9',
+      version='1.3.10.dev0',
       description='Tempi progetti',
       long_description=README + '\n\n' + CHANGES,
       classifiers=[
