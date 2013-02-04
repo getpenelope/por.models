@@ -16,7 +16,7 @@ class TicketStore(object):
                 proxy = TracXmlProxy(trac.application_uri(request), request=request)
                 return proxy.ticket.get(ticket_id)
 
-    def get_tickets_for_project(self, project, request, query=None, limit=None):
+    def get_tickets_for_project(self, project, request, query=None, limit=None, not_invoiced=False):
         tickets = []
         for trac in project.tracs:
             proxy = TracXmlProxy(trac.application_uri(request), request=request)
@@ -29,8 +29,12 @@ class TicketStore(object):
             else:
                 query.append('max=0')
             tickets.extend(proxy.ticket.queryWithDetails('&'.join(query)))
-        cr_ids = [cr.id for cr in project.customer_requests if cr.workflow_state != 'invoiced']
-        return [t for t in tickets if t['cr'] in cr_ids]
+
+        if not_invoiced:
+            cr_ids = [cr.id for cr in project.customer_requests if cr.workflow_state != 'invoiced']
+            tickets = [t for t in tickets if t['cr'] in cr_ids]
+
+        return tickets
 
     def get_tickets_for_request(self, customer_request, limit=None, request=None):
         cr = customer_request
