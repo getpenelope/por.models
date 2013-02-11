@@ -112,7 +112,7 @@ class QualityProject(Quality):
                              'Project creation month', 'Project creation day',
                              'Project completion year', 'Project completion month',
                              'Project completion day'])
-            for project in session.query(Project.id, Project.customer_id, Project.creation_date).outerjoin(TimeEntry, TimeEntry.project_id==Project.id).filter(extract('year', TimeEntry.date) == namespace.year).distinct():
+            for project in session.query(Project.id, Project.completion_date, Project.customer_id, Project.creation_date).outerjoin(TimeEntry, TimeEntry.project_id==Project.id).filter(extract('year', TimeEntry.date) == namespace.year).distinct():
                 writer.writerow([project.id, project.customer_id, 
                                  project.creation_date.strftime('%Y'),
                                  project.creation_date.strftime('%m'),
