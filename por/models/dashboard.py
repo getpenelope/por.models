@@ -326,6 +326,7 @@ class Project(dublincore.DublinCore, Base):
     completion_date = Column(Date)
     assistance_date = Column(Date)
     test_date = Column(Date)
+    inception_date = Column(Date)
 
     customer_id = Column(String, ForeignKey('customers.id'))
     customer = relationship(Customer, uselist=False, backref=backref('projects'))
@@ -384,6 +385,7 @@ class Project(dublincore.DublinCore, Base):
 def new_project_created(mapper, connection, target):
     project_id_candidate = target.id or target.name
     target.id = idnormalizer.normalize(project_id_candidate)
+    target.inception_date = datetime.datetime.now()
 
 event.listen(Project, "before_insert", new_project_created)
 event.listen(Project, "before_insert", dublincore.dublincore_insert)
