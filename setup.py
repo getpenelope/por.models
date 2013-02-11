@@ -51,5 +51,6 @@ setup(name='por.models',
       populate_penelope = por.models.scripts.populate:main
       populate_with_dummies = por.models.scripts.dummies:main
       import_svn = por.models.scripts.importsvn:main
+      quality_export = por.models.scripts.quality_export:main
       """,
       )

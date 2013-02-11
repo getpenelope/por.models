@@ -18,7 +18,7 @@ from pyramid.threadlocal import get_current_request
 from sqlalchemy import Column
 from sqlalchemy import ForeignKey
 from sqlalchemy import Integer, Float
-from sqlalchemy import String
+from sqlalchemy import String, Date
 from sqlalchemy import Unicode
 from sqlalchemy import Boolean
 from sqlalchemy import Sequence
@@ -321,6 +321,11 @@ class Project(dublincore.DublinCore, Base):
     name = Column(Unicode)
     __mapper_args__ = {'order_by': name}
     activated = Column(Boolean, nullable=False, default=True)
+
+    # quality end date fields
+    completion_date = Column(Date)
+    assistance_date = Column(Date)
+    test_date = Column(Date)
 
     customer_id = Column(String, ForeignKey('customers.id'))
     customer = relationship(Customer, uselist=False, backref=backref('projects'))
