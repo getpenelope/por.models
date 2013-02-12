@@ -2,6 +2,7 @@
 -------------------
 
 - add last QA date [amleczko]
+- add google upload for QA reports [amleczko]
 
 
 1.3.11 (2013-02-11)

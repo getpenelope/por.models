@@ -3,6 +3,14 @@ import argparse
 import sys
 import beaker
 import csv
+import tempfile
+
+import gdata.data
+import gdata.docs.client
+import gdata.docs.data
+import gdata.docs.service
+import gdata.sample_util
+
 
 from pyramid.paster import get_appsettings, setup_logging
 from datetime import datetime, date, timedelta
@@ -21,6 +29,38 @@ from por.models import Base
 beaker.cache.cache_regions.update(dict(calculate_matrix={}))
 
 
+def create_client():
+    client = gdata.docs.client.DocsClient(source='GDataDocumentsListAPISample-v1.0')
+    try:
+        gdata.sample_util.authorize_client(
+            client,
+            1,
+            service=client.auth_service,
+            source=client.source,
+            scopes=client.auth_scopes
+        )
+    except gdata.client.BadAuthentication:
+        exit('Invalid user credentials given.')
+    except gdata.client.Error:
+        exit('Login Error')
+    return client
+
+
+def upload_file(client, path, title, collection):
+
+    def get_upload_folder():
+        folders = client.get_doclist(uri='/feeds/default/private/full?title=%s&category=folder' % collection)
+        for folder in folders.entry:
+            return folder
+
+    content_type = gdata.docs.service.SUPPORTED_FILETYPES['CSV']
+    entry = client.Upload(path, title=title, content_type=content_type)
+    folder = get_upload_folder()
+    if folder:
+        client.move(entry, folder)
+    print 'Uploaded...'
+
+
 def tickets_for_cr(metadata, session, trac_name, cr_id=None):
 
     class Ticket(object):
@@ -29,7 +69,8 @@ def tickets_for_cr(metadata, session, trac_name, cr_id=None):
             return datetime.fromtimestamp(self.time/1000000)
 
         def last_history(self, name, year):
-            from_year = [a for a in self.history if a.date.year == year and a.field == name]
+            from_year = [a for a in self.history \
+                                   if a.date.year == year and a.field == name]
             from_year.sort(key=lambda a: a.date, reverse=True)
             for history in from_year:
                 return history.newvalue
@@ -84,13 +125,16 @@ def tickets_for_cr(metadata, session, trac_name, cr_id=None):
 
     query = session.query(Ticket)
     if cr_id:
-        query = query.outerjoin(TicketCustom, TicketCustom.ticket==Ticket.id).filter(and_(TicketCustom.name=='customerrequest',TicketCustom.value==cr_id))
+        query = query.outerjoin(TicketCustom, TicketCustom.ticket==Ticket.id)\
+                     .filter(and_(TicketCustom.name=='customerrequest',
+                                  TicketCustom.value==cr_id))
     return query, Ticket, TicketCustom
 
 
 class Quality(argparse.Action):
     def __call__(self, parser, namespace, values, option_string):
         super(Quality, self).__init__(parser, namespace, values, option_string)
+        self.namespace = namespace
         config_uri = namespace.configuration
         setup_logging(config_uri)
         settings = get_appsettings(config_uri, name='dashboard')
@@ -100,6 +144,17 @@ class Quality(argparse.Action):
         Base.metadata.bind = engine
         Base.metadata.create_all()
         self.metadata = MetaData(engine)
+
+        if not namespace.google and not namespace.filename:
+            raise argparse.ArgumentTypeError(u'You need to pass filename or google.')
+
+        configuration = {}
+        tmp = tempfile.NamedTemporaryFile(suffix='.csv')
+        namespace.filename = tmp.name
+        tmp.close()
+        configuration['filename'] = namespace.filename
+        print 'Creating file %s' % namespace.filename
+        setattr(namespace, option_string.strip('--'), configuration)
 
 
 class QualityProject(Quality):
@@ -112,7 +167,12 @@ class QualityProject(Quality):
                              'Project creation month', 'Project creation day',
                              'Project completion year', 'Project completion month',
                              'Project completion day'])
-            for project in session.query(Project.id, Project.completion_date, Project.customer_id, Project.creation_date).outerjoin(TimeEntry, TimeEntry.project_id==Project.id).filter(extract('year', TimeEntry.date) == namespace.year).distinct():
+            for project in session.query(Project.id, Project.completion_date,
+                                   Project.customer_id, Project.creation_date)\
+                                  .outerjoin(TimeEntry, TimeEntry.project_id==Project.id)\
+                                  .filter(extract('year', TimeEntry.date) == namespace.year)\
+                                  .distinct():
+
                 writer.writerow([project.id, project.customer_id, 
                                  project.creation_date.strftime('%Y'),
                                  project.creation_date.strftime('%m'),
@@ -129,8 +189,11 @@ class QualityCR(Quality):
         session = DBSession()
         with open(namespace.filename, 'wb') as ofile:
             writer = csv.writer(ofile, dialect='excel')
-            writer.writerow(['CR ID', 'Customer', 'Estimation in days', 'TE Duration in days', 'TE sistem/install in days'])
+            writer.writerow(['CR ID', 'Customer', 'CR state',
+                             'Estimation in days', 'TE Duration in days',
+                             'TE sistem/install in days'])
             for cr in session.query(CustomerRequest.id,
+                                    CustomerRequest.workflow_state,
                                     CustomerRequest.project_id,
                                     Project.customer_id,
                                     Trac.trac_name).\
@@ -139,12 +202,20 @@ class QualityCR(Quality):
                               outerjoin(Trac,
                                         Project.id==Trac.project_id).distinct():
 
-                tickets, Ticket, TicketCustom = tickets_for_cr(self.metadata, session, cr.trac_name, cr.id)
+                tickets, Ticket, TicketCustom = tickets_for_cr(self.metadata,
+                                                 session, cr.trac_name, cr.id)
                 tids = [t.id for t in tickets]
                 if not tids:
                     continue
-                estimations = sum([a.days for a in session.query(Estimation.days).filter_by(customer_request_id=cr.id)])
-                entries = session.query(TimeEntry).filter_by(project_id=cr.project_id).filter(TimeEntry.ticket.in_(tids)).filter(extract('year', TimeEntry.date) == namespace.year)
+                estimations = sum([a.days for a in \
+                                session.query(Estimation.days)\
+                                       .filter_by(customer_request_id=cr.id)])
+
+                entries = session.query(TimeEntry)\
+                                 .filter_by(project_id=cr.project_id)\
+                                 .filter(TimeEntry.ticket.in_(tids))\
+                                 .filter(extract('year', TimeEntry.date) == namespace.year)
+
                 if entries.count():
                     total_hours = timedelta_as_work_days(sum([a.hours for a in entries], timedelta()))
                     only_dev = entries.filter(or_(TimeEntry.description.ilike('%install%'),
@@ -166,7 +237,9 @@ class QualityTicket(Quality):
                              'Ticket completion year',
                              'Ticket completion moneth',
                              'Ticket completion day',
-                             'Ticket state', 'Ticket last owner', 'Ticket types', 'Ticket opened by customer', 'Problem nature'])
+                             'Ticket state', 'Ticket last owner', 'Ticket types',
+                             'Ticket opened by customer', 'Problem nature'])
+
             for pr in session.query(Project.customer_id, Project.id, Trac.trac_name)\
                              .outerjoin(Trac, Project.id==Trac.project_id)\
                              .outerjoin(TimeEntry, TimeEntry.project_id==Project.id)\
@@ -220,7 +293,11 @@ class QualityRaw(Quality):
                 if not tids:
                     continue
 
-                entries = session.query(TimeEntry).filter_by(project_id=cr.project_id).filter(TimeEntry.ticket.in_(tids)).filter(extract('year', TimeEntry.date) == namespace.year)
+                entries = session.query(TimeEntry)\
+                                 .filter_by(project_id=cr.project_id)\
+                                 .filter(TimeEntry.ticket.in_(tids))\
+                                 .filter(extract('year', TimeEntry.date) == namespace.year)
+
                 if entries.count():
                     hours = timedelta_as_work_days(sum([a.hours for a in entries], timedelta()))
                     writer.writerow([cr.id, cr.customer_id, hours])
@@ -239,10 +316,21 @@ def main():
     parser.set_defaults(year=DEFAULT_YEAR)
 
     parser.add_argument('configuration', action='store', help='path to the wsgi configuration ini file.')
-    parser.add_argument('filename', action='store', help='path to the output CSV file.')
+    #parser.add_argument('--filename', help='path to the output CSV file.')
+    parser.add_argument('--google', help='google folder id.')
     parser.add_argument('--year', help='Report year. (default %s)' % DEFAULT_YEAR, type=int)
     parser.add_argument('--project', nargs=0, action=QualityProject, help='generate project quality report.')
     parser.add_argument('--cr', nargs=0, action=QualityCR, help='generate customer request quality report.')
     parser.add_argument('--ticket', nargs=0, action=QualityTicket, help='generate ticket quality report.')
     parser.add_argument('--raw', nargs=0, action=QualityRaw, help='generate raw quality report.')
-    parser.parse_args()
+    namespace = parser.parse_args()
+
+    if namespace.google:
+        client = create_client()
+        for report in  ['project', 'cr', 'ticket', 'raw']:
+            configuration = getattr(namespace, report)
+            if configuration:
+                upload_file(client, configuration['filename'],
+                            'Report: %s' % report,
+                            namespace.google)
+                os.unlink(configuration['filename'])
