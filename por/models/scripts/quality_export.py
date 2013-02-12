@@ -221,7 +221,7 @@ class QualityCR(Quality):
                     only_dev = entries.filter(or_(TimeEntry.description.ilike('%install%'),
                                                   TimeEntry.description.ilike('%sistem%')))
                     only_dev_hours = timedelta_as_work_days(sum([a.hours for a in only_dev], timedelta()))
-                    writer.writerow([cr.id, cr.customer_id, estimations, total_hours, only_dev_hours])
+                    writer.writerow([cr.id, cr.customer_id, cr.workflow_state, estimations, total_hours, only_dev_hours])
 
 
 class QualityTicket(Quality):
