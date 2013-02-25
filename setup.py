@@ -27,7 +27,7 @@ if sys.version_info[:3] < (2, 5, 0):
     requires.append('pysqlite')
 
 setup(name='por.models',
-      version='1.3.13.dev0',
+      version='1.3.13',
       description='SQLAlchemy models for Penelope',
       long_description=README + '\n\n' + CHANGES,
       classifiers=[
