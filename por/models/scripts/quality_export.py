@@ -145,8 +145,8 @@ class Quality(argparse.Action):
         Base.metadata.create_all()
         self.metadata = MetaData(engine)
 
-        if not namespace.google and not namespace.filename:
-            raise argparse.ArgumentTypeError(u'You need to pass filename or google.')
+        #if not namespace.google and not namespace.filename:
+        #    raise argparse.ArgumentTypeError(u'You need to pass filename or google.')
 
         configuration = {}
         tmp = tempfile.NamedTemporaryFile(suffix='.csv')
@@ -254,10 +254,11 @@ class QualityTicket(Quality):
                 for ticket in tickets_in_year:
                     last_status = ticket.last_history('status', namespace.year)
                     close_date = ticket.close_date
-                    all_types = set([ticket.type])
+                    all_types = set([])
                     for h in ticket.history:
                         if h.field == 'type':
-                            all_types.update([h.newvalue])
+                            all_types.update([h.oldvalue])
+                    all_types.update([ticket.type])
                     all_types = '|'.join(all_types).encode('utf8','ignore')
                     writer.writerow(
                           [ticket.id, pr.customer_id,
