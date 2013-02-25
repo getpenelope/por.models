@@ -500,10 +500,13 @@ def update_trac_svn_uri(target, value, oldvalue, initiator):
     if request:
         proto = request.environ.get('wsgi.url_scheme')
         http_host = request.environ.get('HTTP_HOST')
+        svnurl = request.registry.settings.get('por.svn.url')
+        if svnurl.endswith('/'):
+            svnurl = svnurl[:-1]
         if not oldvalue and value:
             if value.startswith('svn://'):
                 svn_id = value[6:]
-                return '%s://%s/svn/%s' % (proto, http_host, svn_id)
+                return '%s/%s' % (svnurl, svn_id)
             elif value.startswith('trac://'):
                 trac_id = value[7:]
                 return '%s://%s/trac/%s' % (proto, http_host, trac_id)
