@@ -338,7 +338,6 @@ class Project(dublincore.DublinCore, Base):
                            backref=backref('project_manager'),
                            order_by=func.substring(User.fullname,'([^[:space:]]+)(?:,|$)'))
     favorite_users = relationship(User, secondary=favorite_projects, backref="favorite_projects")
-    karma_id = Column(String)
 
     def __str__(self):
         return self.__unicode__().encode('utf8')
