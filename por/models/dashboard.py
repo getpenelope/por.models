@@ -583,6 +583,18 @@ class Trac(Application):
     implements(ITrac)
     __mapper_args__ = {'polymorphic_identity': TRAC}
 
+    def addTicket(self, ticket):
+        import os
+        from trac.env import Environment
+        from trac.ticket.model import Ticket
+
+        tracenvs = os.environ.get('TRACENVS')
+        tracenv = Environment('%s/%s' % (tracenvs, self.trac_name))
+        ticket['customerrequest'] = ticket['customerrequest'].id
+        ticket['status'] = 'new'
+        t = Ticket(tracenv)
+        t.populate(ticket)
+        t.insert()
 
 class TracReport(Application):
 

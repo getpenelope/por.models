@@ -2,6 +2,7 @@
 -------------------
 
 - move karma to separate package [amleczko]
+- added addTicket method to Trac [massimoazzolini]
 
 
 1.3.13 (2013-02-25)
