@@ -71,21 +71,19 @@ class TicketStore(object):
         from por.models.dashboard import User
 
         tracenvs = os.environ.get('TRACENVS')
-        tracs = list(project.tracs)
-        for trac in tracs:
+        for trac in project.tracs:
             for t in tickets:
                 owner = DBSession.query(User).get(t['owner'])
                 ticket = {'summary': t['summary'],
                         'description': t['description'],
-                        'customerrequest': customerrequest,
+                        'customerrequest': customerrequest.id,
                         'reporter': reporter.email,
                         'type': 'task',
                         'priority': 'major',
                         'milestone': 'Backlog',
-                        'owner': owner.email}
+                        'owner': owner.email,
+                        'status': 'new'}
                 tracenv = Environment('%s/%s' % (tracenvs, trac.trac_name))
-                ticket['customerrequest'] = ticket['customerrequest'].id
-                ticket['status'] = 'new'
                 t = Ticket(tracenv)
                 t.populate(ticket)
                 t.insert()
