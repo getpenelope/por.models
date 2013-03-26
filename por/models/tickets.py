@@ -5,6 +5,7 @@ from por.models import DBSession
 from por.trac.api import TracXmlProxy
 
 
+
 class TicketStore(object):
     implements(ITicketStore)
 
@@ -63,6 +64,29 @@ class TicketStore(object):
             ticket_cr.extend(proxy.ticket.queryCustomerRequestsByTicktes(ticket_ids))
         return ticket_cr
 
+    def add_tickets(self, project, customerrequest, tickets, reporter):
+        import os
+        from trac.env import Environment
+        from trac.ticket.model import Ticket
+        from por.models.dashboard import User
+
+        tracenvs = os.environ.get('TRACENVS')
+        for trac in project.tracs:
+            for t in tickets:
+                owner = DBSession.query(User).get(t['owner'])
+                ticket = {'summary': t['summary'],
+                        'description': t['description'],
+                        'customerrequest': customerrequest.id,
+                        'reporter': reporter.email,
+                        'type': 'task',
+                        'priority': 'major',
+                        'milestone': 'Backlog',
+                        'owner': owner.email,
+                        'status': 'new'}
+                tracenv = Environment('%s/%s' % (tracenvs, trac.trac_name))
+                t = Ticket(tracenv)
+                t.populate(ticket)
+                t.insert()
 
 ticket_store = TicketStore()
 
