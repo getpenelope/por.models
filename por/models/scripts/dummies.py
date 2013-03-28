@@ -35,7 +35,6 @@ def main(argv=sys.argv):
     config_uri = argv[1]
     setup_logging(config_uri)
     settings = get_appsettings(config_uri, name='dashboard')
-    os.environ['TRACENVS'] = settings['por.trac.envs']
     engine = engine_from_config(settings, 'sa.dashboard.')
     DBSession.configure(bind=engine)
     Base.metadata.bind = engine
