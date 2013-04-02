@@ -2,14 +2,18 @@ import os
 import sys
 import transaction
 import base64
+import beaker
 
 from sqlalchemy import engine_from_config
-from pyramid.paster import get_appsettings, setup_logging
+from pyramid.paster import setup_logging, bootstrap
 
 from por.models.dbsession import DBSession
 from por.models import Base
 from por.models.scripts import add_user, add_role
 from por.models.dashboard import GlobalConfig
+
+
+beaker.cache.cache_regions.update(dict(calculate_matrix={'key_length':''}))
 
 
 def usage(argv):
@@ -24,7 +28,8 @@ def main(argv=sys.argv):
 
     config_uri = argv[1]
     setup_logging(config_uri)
-    settings = get_appsettings(config_uri, name='dashboard')
+    env = bootstrap('%s#dashboard'% config_uri)
+    settings = env.get('registry').settings
     engine = engine_from_config(settings, 'sa.dashboard.')
     DBSession.configure(bind=engine)
     Base.metadata.bind = engine

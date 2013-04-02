@@ -5,7 +5,8 @@ import random
 import beaker
 
 from sqlalchemy import engine_from_config
-from pyramid.paster import get_appsettings, setup_logging
+from pyramid.paster import setup_logging
+from pyramid.paster import bootstrap
 
 from por.models.dashboard import Trac
 from por.models.scripts import add_customer, add_customer_request, add_project, populate_time_entries, add_user, add_role
@@ -15,7 +16,7 @@ from por.models.dashboard import GlobalConfig
 from por.trac.populate import add_trac_tickets
 
 
-beaker.cache.cache_regions.update(dict(calculate_matrix={}))
+beaker.cache.cache_regions.update(dict(calculate_matrix={'key_length':''}))
 
 
 def usage(argv):
@@ -34,11 +35,13 @@ def main(argv=sys.argv):
         use_small = False
     config_uri = argv[1]
     setup_logging(config_uri)
-    settings = get_appsettings(config_uri, name='dashboard')
+    env = bootstrap('%s#dashboard'% config_uri)
+    settings = env.get('registry').settings
     engine = engine_from_config(settings, 'sa.dashboard.')
     DBSession.configure(bind=engine)
     Base.metadata.bind = engine
     Base.metadata.create_all()
+
 
     with transaction.manager:
         random.seed(42)
