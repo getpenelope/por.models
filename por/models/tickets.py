@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
+from pyramid.threadlocal import get_current_registry
 from zope.interface import implements
 from por.models.interfaces import ITicketStore
 from por.models import DBSession
 from por.trac.api import TracXmlProxy
-
 
 
 class TicketStore(object):
@@ -65,12 +65,13 @@ class TicketStore(object):
         return ticket_cr
 
     def add_tickets(self, project, customerrequest, tickets, reporter):
-        import os
         from trac.env import Environment
         from trac.ticket.model import Ticket
         from por.models.dashboard import User
 
-        tracenvs = os.environ.get('TRACENVS')
+        settings = get_current_registry().settings
+        tracenvs = settings.get('por.trac.envs')
+
         for trac in project.tracs:
             for t in tickets:
                 owner = DBSession.query(User).get(t['owner'])
