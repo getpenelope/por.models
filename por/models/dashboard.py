@@ -436,6 +436,7 @@ class Application(dublincore.DublinCore, Base):
     id = Column(Integer, primary_key=True)
     position = Column(Integer, nullable=False, default=-1)
     name = Column(Unicode)
+    searchable = Column(Boolean, nullable=False, default=True)
     trac_name = deferred(Column(String(128)))
     svn_name = deferred(Column(String(128)))
     description = deferred(Column(Unicode))
