@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from pyramid.threadlocal import get_current_registry
+from pyramid.threadlocal import get_current_registry, get_current_request
 from zope.interface import implements
 from por.models.interfaces import ITicketStore
 from por.models import DBSession
@@ -64,9 +64,11 @@ class TicketStore(object):
             ticket_cr.extend(proxy.ticket.queryCustomerRequestsByTicktes(ticket_ids))
         return ticket_cr
 
-    def add_tickets(self, project, customerrequest, tickets, reporter):
+    def add_tickets(self, project, customerrequest, tickets, reporter, notify=False):
         from trac.env import Environment
+        from trac.ticket.notification import TicketNotifyEmail
         from trac.ticket.model import Ticket
+        from trac.util.text import exception_to_unicode
         from por.models.dashboard import User
 
         settings = get_current_registry().settings
@@ -88,6 +90,13 @@ class TicketStore(object):
                 t = Ticket(tracenv)
                 t.populate(ticket)
                 t.insert()
+                if notify:
+                    try:
+                        tn = TicketNotifyEmail(tracenv)
+                        tn.notify(t, newticket=True)
+                    except Exception, e:
+                        request = get_current_request()
+                        request.add_message('Failure sending notification on creation '
+                        'of a ticket #%s: %s' % (t.id, exception_to_unicode(e)), 'error')
 
 ticket_store = TicketStore()
-
