@@ -73,6 +73,7 @@ class TicketStore(object):
 
         settings = get_current_registry().settings
         tracenvs = settings.get('por.trac.envs')
+        request = get_current_request()
 
         for trac in project.tracs:
             for t in tickets:
@@ -87,6 +88,7 @@ class TicketStore(object):
                         'owner': owner.email,
                         'status': 'new'}
                 tracenv = Environment('%s/%s' % (tracenvs, trac.trac_name))
+                tracenv.abs_href.base = trac.api_uri
                 t = Ticket(tracenv)
                 t.populate(ticket)
                 t.insert()
@@ -95,7 +97,6 @@ class TicketStore(object):
                         tn = TicketNotifyEmail(tracenv)
                         tn.notify(t, newticket=True)
                     except Exception, e:
-                        request = get_current_request()
                         request.add_message('Failure sending notification on creation '
                         'of a ticket #%s: %s' % (t.id, exception_to_unicode(e)), 'error')
 
