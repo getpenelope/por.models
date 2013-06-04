@@ -38,7 +38,8 @@ from por.models import Base, DBSession, dublincore, workflow, classproperty
 from por.models.tickets import ticket_store
 from por.models.interfaces import ICustomerRequest, IRoleable, IProjectRelated
 from por.models.interfaces import IProject, IUser, IPorModel, ICustomer, IRole
-from por.models.interfaces import IApplication, ITrac, ISVN, IGoogleDocs, ITracReport, IGenericApp
+from por.models.interfaces import IApplication, ITrac, ISVN, IGoogleDocs
+from por.models.interfaces import ITracReport, IGenericApp, IContract
 
 
 role_assignments = Table('role_assignments', Base.metadata,
@@ -600,6 +601,49 @@ class GoogleDoc(Application):
 
     implements(IGoogleDocs)
     __mapper_args__ = {'polymorphic_identity': GOOGLE_DOCS}
+
+
+class Contract(dublincore.DublinCore, workflow.Workflow, Base):
+    implements(IContract, IProjectRelated)
+
+    project_related_label = 'Contracts'
+    project_related_id = 'contracts'
+
+    __tablename__ = 'contracts'
+    __acl__ = deepcopy(CRUD_ACL)
+    #view
+    __acl__.allow('role:project_manager', 'view')
+    __acl__.allow('role:secretary', 'view')
+    __acl__.allow('role:internal_developer', 'view')
+    #workflow
+    __acl__.allow('role:project_manager', 'workflow')
+    #add
+    __acl__.allow('role:project_manager', 'new')
+    __acl__.allow('role:internal_developer', 'new')
+    #edit
+    __acl__.allow('role:project_manager', 'edit')
+    __acl__.allow('role:internal_developer', 'edit')
+
+    id = Column(String, primary_key=True)
+    name = Column(Unicode)
+    description = deferred(Column(Unicode))
+    days = Column(Float(precision=2))
+    ammount = Column(Float(precision=2))
+    contract_number = Column(Unicode)
+    start_date = Column(Date)
+    end_date = Column(Date)
+
+    project_id = Column(String, ForeignKey('projects.id'), nullable=False)
+    project = relationship(Project, uselist=False, backref=backref('contracts'))
+
+    def __str__(self):
+        return self.__unicode__().encode('utf8')
+
+    def __unicode__(self):
+        return self.name
+
+event.listen(Contract, "before_insert", dublincore.dublincore_insert)
+event.listen(Contract, "before_update", dublincore.dublincore_update)
 
 
 class CustomerRequest(dublincore.DublinCore, workflow.Workflow, Base):

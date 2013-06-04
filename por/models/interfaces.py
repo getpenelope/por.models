@@ -11,6 +11,10 @@ class IWorkflowEnabled(IPorModel):
     "marker interface for all workflowenabled objects"
 
 
+class IContract(IPorModel):
+    "marker interface for contract model"
+
+
 class ICustomerRequest(IPorModel):
     "marker interface for customer request model"
 

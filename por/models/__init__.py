@@ -17,9 +17,12 @@ class classproperty(object):
 
 from por.models.dashboard import Project, User, GlobalConfig, Role, OpenId,\
                                  PasswordResetToken, Application, CustomerRequest,\
-                                 Estimation, Group, SavedQuery, Customer
+                                 Estimation, Group, SavedQuery, Customer,\
+                                 Contract
+
 Project; User; GlobalConfig; PasswordResetToken; Role; SavedQuery
-Application; Customer; CustomerRequest; Group; OpenId; Estimation
+Application; Customer; CustomerRequest; Group; OpenId; Estimation; Contract
+
 from por.models.tp import TimeEntry; TimeEntry
 
 from por.trac import events; events
