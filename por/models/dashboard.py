@@ -680,18 +680,23 @@ class CustomerRequest(dublincore.DublinCore, workflow.Workflow, Base):
 
     id = Column(String, primary_key=True)
     uid = Column(Integer)
-    project_id = Column(String, ForeignKey('projects.id'))
     name = Column(Unicode)
     description = deferred(Column(Unicode))
+    project_id = Column(String, ForeignKey('projects.id'))
     project = relationship(Project, uselist=False, backref=backref('customer_requests'))
     placement = Column(Integer, nullable=False, server_default=str(PLACEMENT_BOARD))
-    contract = Column(Unicode)
+    contract_id = Column(String, ForeignKey('contracts.id'))
+    contract = relationship(Contract, uselist=False, backref=backref('customer_requests'))
+    old_contract_name = Column(Unicode)
 
     def __str__(self):
         return self.__unicode__().encode('utf8')
 
     def __unicode__(self):
-        return self.name
+        if self.contract:
+            return '%s [%s]' % (self.name, self.contract)
+        else:
+            return self.name
 
     def get_tickets(self, request=None):
         return ticket_store.get_tickets_for_request(customer_request=self, request=request or self.request)
