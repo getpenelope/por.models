@@ -625,7 +625,7 @@ class Contract(dublincore.DublinCore, workflow.Workflow, Base):
     __acl__.allow('role:internal_developer', 'edit')
 
     id = Column(String, primary_key=True)
-    name = Column(Unicode)
+    name = Column(Unicode, nullable=False)
     description = deferred(Column(Unicode))
     days = Column(Float(precision=2))
     ammount = Column(Float(precision=2))
@@ -642,6 +642,12 @@ class Contract(dublincore.DublinCore, workflow.Workflow, Base):
     def __unicode__(self):
         return self.name
 
+
+def new_contract_created(mapper, connection, target):
+    contract_id_candidate = '%s_%s' % (target.project_id, target.name)
+    target.id = idnormalizer.normalize(contract_id_candidate)
+
+event.listen(Contract, "before_insert", new_contract_created)
 event.listen(Contract, "before_insert", dublincore.dublincore_insert)
 event.listen(Contract, "before_update", dublincore.dublincore_update)
 
