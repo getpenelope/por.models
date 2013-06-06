@@ -616,13 +616,13 @@ class Contract(dublincore.DublinCore, workflow.Workflow, Base):
     __acl__.allow('role:secretary', 'view')
     __acl__.allow('role:internal_developer', 'view')
     #workflow
-    __acl__.allow('role:project_manager', 'workflow')
+    __acl__.allow('role:secretary', 'workflow')
     #add
     __acl__.allow('role:project_manager', 'new')
-    __acl__.allow('role:internal_developer', 'new')
+    __acl__.allow('role:secretary', 'new')
     #edit
     __acl__.allow('role:project_manager', 'edit')
-    __acl__.allow('role:internal_developer', 'edit')
+    __acl__.allow('role:secretary', 'edit')
 
     id = Column(String, primary_key=True)
     name = Column(Unicode, nullable=False)
