@@ -16,7 +16,7 @@ from sqlalchemy import event
 from sqlalchemy.orm import relationship, backref
 
 from por.models.dublincore import dublincore_insert, dublincore_update, DublinCore
-from por.models import Base
+from por.models import Base, DBSession, CustomerRequest
 from por.models import workflow, classproperty
 from por.models.tickets import ticket_store
 from por.models.interfaces import ITimeEntry, IProjectRelated
@@ -63,6 +63,9 @@ class TimeEntry(DublinCore, workflow.Workflow, Base):
     tickettype = Column(String(25))
     invoice_number = Column(String(10))
 
+    contract_id = Column(String, ForeignKey('contracts.id'), index=True, nullable=True)
+    contract = relationship('Contract', uselist=False, backref=backref('time_entries', order_by=id))
+
     project_id = Column(String, ForeignKey('projects.id'), index=True, nullable=False)
     project = relationship('Project', uselist=False, backref=backref('time_entries', order_by=id))
 
@@ -96,6 +99,9 @@ class TimeEntry(DublinCore, workflow.Workflow, Base):
         acl.allow('role:project_manager', 'listing')
         return acl
 
+    def __init__(self, *args, **kwargs):
+        super(TimeEntry, self).__init__(*args, **kwargs)
+
     def __str__(self):
         return self.__unicode__().encode('utf8')
 
@@ -127,10 +133,15 @@ class TimeEntry(DublinCore, workflow.Workflow, Base):
 def new_te_created(mapper, connection, target):
     try:
         trac_ticket = target.get_ticket()
-        if trac_ticket:
-            target.tickettype = trac_ticket[3]['type']
     except xmlrpclib.Error:
         pass
+    else:
+        if trac_ticket:
+            target.tickettype = trac_ticket[3]['type']
+            contract_id = DBSession().query(CustomerRequest)\
+                                     .get(trac_ticket[3]['customerrequest'])\
+                                     .contract_id
+            target.contract_id = contract_id
 
 
 event.listen(TimeEntry, "before_insert", new_te_created)
