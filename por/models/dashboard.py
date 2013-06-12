@@ -705,7 +705,7 @@ class CustomerRequest(dublincore.DublinCore, workflow.Workflow, Base):
     contract_id = Column(String, ForeignKey('contracts.id'))
     contract = relationship(Contract, uselist=False, backref=backref('customer_requests'))
     old_contract_name = Column(Unicode)
-    filler = Column(Boolean, nullable=False, default=True)
+    filler = Column(Boolean, nullable=False, default=False)
 
     def __str__(self):
         return self.__unicode__().encode('utf8')
@@ -734,7 +734,7 @@ class CustomerRequest(dublincore.DublinCore, workflow.Workflow, Base):
 
     @property
     def estimation_days(self):
-        if self.filler:
+        if self.filler and self.contract:
             other_crs = DBSession().query(CustomerRequest)\
                                    .filter_by(filler=False)\
                                    .filter_by(contract_id=self.contract_id)
