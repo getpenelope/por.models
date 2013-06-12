@@ -48,12 +48,16 @@ class TicketStore(object):
         """
         returns a mapping of {ticket.id: cr_id}
         """
+        import xmlrpclib
         ret = {}
 
         for trac in project.tracs:
             proxy = TracXmlProxy(trac.application_uri(request), request=request)
-            for ticket_id, cr_id in proxy.ticket.queryAllCustomerRequests():
-                ret[ticket_id] = cr_id
+            try:
+                for ticket_id, cr_id in proxy.ticket.queryAllCustomerRequests():
+                    ret[ticket_id] = cr_id
+            except xmlrpclib.ProtocolError:
+                pass
 
         return ret
 

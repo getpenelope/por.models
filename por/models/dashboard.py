@@ -634,7 +634,7 @@ class Contract(dublincore.DublinCore, workflow.Workflow, Base):
     id = Column(String, primary_key=True)
     name = Column(Unicode, nullable=False)
     description = deferred(Column(Unicode))
-    days = Column(Float(precision=2))
+    days = Column(Float(precision=2), nullable=False, default=0)
     ammount = Column(Float(precision=2))
     contract_number = Column(Unicode)
     start_date = Column(Date)
@@ -705,6 +705,7 @@ class CustomerRequest(dublincore.DublinCore, workflow.Workflow, Base):
     contract_id = Column(String, ForeignKey('contracts.id'))
     contract = relationship(Contract, uselist=False, backref=backref('customer_requests'))
     old_contract_name = Column(Unicode)
+    filler = Column(Boolean, nullable=False, default=True)
 
     def __str__(self):
         return self.__unicode__().encode('utf8')
@@ -733,6 +734,15 @@ class CustomerRequest(dublincore.DublinCore, workflow.Workflow, Base):
 
     @property
     def estimation_days(self):
+        if self.filler:
+            other_crs = DBSession().query(CustomerRequest)\
+                                   .filter_by(filler=False)\
+                                   .filter_by(contract_id=self.contract_id)
+            filler = self.contract.days - sum([cr.estimation_days for cr in other_crs])
+            if filler < 0:
+                return 0
+            else:
+                return filler
         return sum([a.days for a in self.estimations], float())
 
     @property
