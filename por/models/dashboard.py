@@ -381,6 +381,13 @@ class Project(dublincore.DublinCore, Base):
     def active(self):
         return (self.activated != False) & (self.activated != None)
 
+    def contracts_by_state(self):
+        return DBSession().query(Contract.id, Contract.name, Contract.workflow_state)\
+                          .join(Project).filter(Project.id==self.id)\
+                          .order_by(Contract.active.desc())\
+                          .order_by(Contract.modification_date.desc())\
+                          .order_by(Contract.name)
+
 
 def new_project_created(mapper, connection, target):
     project_id_candidate = target.id or target.name
@@ -634,13 +641,17 @@ class Contract(dublincore.DublinCore, workflow.Workflow, Base):
     end_date = Column(Date)
 
     project_id = Column(String, ForeignKey('projects.id'), nullable=False)
-    project = relationship(Project, uselist=False, backref=backref('contracts'))
+    project = relationship(Project, uselist=False, backref=backref('contracts', order_by=id))
 
     def __str__(self):
         return self.__unicode__().encode('utf8')
 
     def __unicode__(self):
         return self.name
+
+    @hybrid_property
+    def active(self):
+        return (self.workflow_state == 'active')
 
 
 def new_contract_created(mapper, connection, target):
