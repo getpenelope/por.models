@@ -1,4 +1,4 @@
-1.3.18 (unreleased)
+1.3.18 (2013-06-13)
 -------------------
 
 - simplify svn login [amleczko]
