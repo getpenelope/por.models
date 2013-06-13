@@ -129,6 +129,7 @@ class User(Principal):
     __mapper_args__ = {'order_by': func.substring(fullname, '([^[:space:]]+)(?:,|$)')}
     email = column_property(Column('email', Unicode, unique=True),
                             comparator_factory=LowercaseComparator)
+    svn_login = deferred(Column(Unicode, unique=True, nullable=False))
     phone = deferred(Column(String(20)))
     mobile = deferred(Column(String(20)))
     password = deferred(Column(String))
@@ -139,10 +140,6 @@ class User(Principal):
 
     @hybrid_property
     def login(self):
-        return self.email
-
-    @hybrid_property
-    def svn_login(self):
         return self.email
 
     def generate_salt(self):
