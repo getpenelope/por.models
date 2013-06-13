@@ -624,6 +624,13 @@ class Contract(dublincore.DublinCore, workflow.Workflow, Base):
     __acl__.allow('role:internal_developer', 'view')
     #workflow
     __acl__.allow('role:secretary', 'workflow')
+    __acl__.allow('role:project_manager', 'workflow')
+    __acl__.allow('role:project_manager', 'workflow_activate')
+    __acl__.allow('role:project_manager', 'workflow_deactivate')
+    __acl__.allow('role:project_manager', 'workflow_achieve')
+    __acl__.allow('role:secretary', 'workflow_achieve')
+    __acl__.allow('role:project_manager', 'workflow_unachieve')
+    __acl__.allow('role:secretary', 'workflow_unachieve')
     #add
     __acl__.allow('role:project_manager', 'new')
     __acl__.allow('role:secretary', 'new')
@@ -715,6 +722,10 @@ class CustomerRequest(dublincore.DublinCore, workflow.Workflow, Base):
             return '%s [%s]' % (self.name, self.contract)
         else:
             return self.name
+
+    @hybrid_property
+    def active(self):
+        return (self.workflow_state == 'estimated')
 
     def get_tickets(self, request=None):
         return ticket_store.get_tickets_for_request(customer_request=self, request=request or self.request)
