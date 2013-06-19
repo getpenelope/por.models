@@ -20,7 +20,8 @@ requires = [
     'lorem-ipsum-generator',
     'Trac',
     'profilehooks',
-    'por.dashboard'
+    'por.dashboard',
+    'gspread'
     ]
 
 if sys.version_info[:3] < (2, 5, 0):
@@ -52,5 +53,6 @@ setup(name='por.models',
       populate_with_dummies = por.models.scripts.dummies:main
       import_svn = por.models.scripts.importsvn:main
       quality_export = por.models.scripts.quality_export:main
+      contracts_import = por.models.scripts.contracts_import:main
       """,
       )
