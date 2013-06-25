@@ -32,7 +32,7 @@ class TicketStore(object):
             tickets.extend(proxy.ticket.queryWithDetails('&'.join(query)))
 
         if not_invoiced:
-            cr_ids = [cr.id for cr in project.customer_requests if cr.workflow_state != 'invoiced']
+            cr_ids = [cr.id for cr in project.customer_requests if cr.workflow_state in ['created', 'estimated']]
             tickets = [t for t in tickets if t['cr'] in cr_ids]
 
         return tickets

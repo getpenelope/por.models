@@ -1,7 +1,7 @@
 1.3.19 (unreleased)
 -------------------
 
-- Nothing changed yet.
+- make sure only estimated CR get's new time entries [amleczko]
 
 
 1.3.18 (2013-06-13)
