@@ -127,7 +127,8 @@ def main(argv=sys.argv):
         for contract_name, opts in contracts.items():
             crs = [session.query(CustomerRequest).get(a) for a in opts['crs']]
 
-            contract = session.query(Contract).filter_by(name=contract_name).first()
+            #contract = session.query(Contract).filter_by(name=contract_name).first()
+            contract = crs[0].contract
             if not contract:
                 contract = Contract(name=contract_name)
             contract.days = opts['gg']
