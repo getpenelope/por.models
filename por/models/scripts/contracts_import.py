@@ -128,7 +128,9 @@ def main(argv=sys.argv):
         session = DBSession()
         for contract_uid, opts in contracts.items():
             crs = [session.query(CustomerRequest).get(a) for a in opts['crs']]
-
+            crs = [a for a in crs if a]
+            if not crs:
+                continue
             #contract = session.query(Contract).filter_by(name=contract_name).first()
             contract = crs[0].contract
             if not contract:
