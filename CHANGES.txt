@@ -2,6 +2,7 @@
 -------------------
 
 - New contract integration [amleczko]
+- make sure only estimated CR get's new time entries [amleczko]
 
 
 1.3.18 (2013-06-13)
