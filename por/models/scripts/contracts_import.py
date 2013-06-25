@@ -75,6 +75,15 @@ def update_time_entries():
                 continue
             tp.contract_id = contract.id
 
+def map_state(state):
+    if state == 'A':
+        return 'active'
+    if state == 'B':
+        return 'draft'
+    if state == 'D':
+        return 'done'
+    return 'draft'
+
 
 def main(argv=sys.argv):
     if len(argv) != 2:
@@ -104,9 +113,9 @@ def main(argv=sys.argv):
         contracts.setdefault(row['titolocommessa'], {'crs':[]})
         contracts[row['titolocommessa']]['nrcontratto'] = row['nrcontratto']
         contracts[row['titolocommessa']]['gg'] = row['gg'] or 0
-        contracts[row['titolocommessa']]['stato'] = row['stato']
         contracts[row['titolocommessa']]['amount'] = row['amount'] or 0
         contracts[row['titolocommessa']]['crs'].append(row['cr_id'])
+        contracts[row['titolocommessa']]['stato'] = map_state(row['stato'])
 
     # now we have a structure:
     # contracts['Contract name'] = {'crs': ['customer_request_id_1',
@@ -124,6 +133,7 @@ def main(argv=sys.argv):
             contract.days = opts['gg']
             contract.ammount = opts['amount']
             contract.contract_number = opts['nrcontratto']
+            contract.workflow_state = opts['stato']
             for cr in crs:
                 if not cr:
                     continue
