@@ -110,12 +110,14 @@ def main(argv=sys.argv):
     for row in crs:
         if not row['titolocommessa']:
             continue
-        contracts.setdefault(row['titolocommessa'], {'crs':[]})
-        contracts[row['titolocommessa']]['nrcontratto'] = row['nrcontratto']
-        contracts[row['titolocommessa']]['gg'] = row['gg'] or 0
-        contracts[row['titolocommessa']]['amount'] = row['amount'] or 0
-        contracts[row['titolocommessa']]['crs'].append(row['cr_id'])
-        contracts[row['titolocommessa']]['stato'] = map_state(row['stato'])
+        contract_uid = '%s_%s' % (row['titolocommessa'], row['customer_id'])
+        contracts.setdefault(contract_uid, {'crs': []})
+        contracts[contract_uid]['titolocommessa'] = row['titolocommessa']
+        contracts[contract_uid]['nrcontratto'] = row['nrcontratto']
+        contracts[contract_uid]['gg'] = row['gg'] or 0
+        contracts[contract_uid]['amount'] = row['amount'] or 0
+        contracts[contract_uid]['crs'].append(row['cr_id'])
+        contracts[contract_uid]['stato'] = map_state(row['stato'])
 
     # now we have a structure:
     # contracts['Contract name'] = {'crs': ['customer_request_id_1',
@@ -124,13 +126,13 @@ def main(argv=sys.argv):
 
     with transaction.manager:
         session = DBSession()
-        for contract_name, opts in contracts.items():
+        for contract_uid, opts in contracts.items():
             crs = [session.query(CustomerRequest).get(a) for a in opts['crs']]
 
             #contract = session.query(Contract).filter_by(name=contract_name).first()
             contract = crs[0].contract
             if not contract:
-                contract = Contract(name=contract_name)
+                contract = Contract(name=opts['titolocommessa'])
             contract.days = opts['gg']
             contract.ammount = opts['amount']
             contract.contract_number = opts['nrcontratto']
