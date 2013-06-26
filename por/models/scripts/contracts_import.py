@@ -19,7 +19,7 @@ beaker.cache.cache_regions.update(dict(calculate_matrix={'key_length':''}))
 
 def usage(argv):
     cmd = os.path.basename(argv[0])
-    print('usage: %s <config_uri>\n'
+    print('usage: %s <config_uri> [google_user] [google_spreadsheet key]\n'
           '(example: "%s development.ini")' % (cmd, cmd)) 
     sys.exit(1)
 
@@ -86,7 +86,7 @@ def map_state(state):
 
 
 def main(argv=sys.argv):
-    if len(argv) != 2:
+    if len(argv) < 2:
         usage(argv)
 
     config_uri = argv[1]
@@ -97,9 +97,16 @@ def main(argv=sys.argv):
     DBSession.configure(bind=engine)
     Base.metadata.bind = engine
 
-    google_user = raw_input('Google Spreadsheet User: ')
+    google_opts = argv[2:]
+    try:
+        google_user = google_opts.pop(0)
+    except IndexError:
+        google_user = raw_input('Google Spreadsheet User: ')
+    try:
+        spreadsheet_key = google_opts.pop(0)
+    except IndexError:
+        spreadsheet_key = raw_input('Google Spreadsheet ID: ')
     google_password = getpass.getpass("Google Spreadsheet Password: ")
-    spreadsheet_key = raw_input('Google Spreadsheet ID: ')
 
     gc = gspread.login(google_user, google_password)
     sht = gc.open_by_key(spreadsheet_key)
@@ -110,7 +117,9 @@ def main(argv=sys.argv):
     for row in crs:
         if not row['titolocommessa']:
             continue
-        contract_uid = '%s_%s' % (row['titolocommessa'], row['customer_id'])
+        contract_uid = '%s_%s_%s' % (row['project_name'],
+                                     row['titolocommessa'],
+                                     row['customer_id'])
         contracts.setdefault(contract_uid, {'crs': []})
         contracts[contract_uid]['titolocommessa'] = row['titolocommessa']
         contracts[contract_uid]['nrcontratto'] = row['nrcontratto']
@@ -120,9 +129,9 @@ def main(argv=sys.argv):
         contracts[contract_uid]['stato'] = map_state(row['stato'])
 
     # now we have a structure:
-    # contracts['Contract name'] = {'crs': ['customer_request_id_1',
-    #                                       'customer_request_id_2'],
-    #                               'gg': '12'}
+    # contracts['ContractUID'] = {'crs': ['customer_request_id_1',
+    #                                     'customer_request_id_2'],
+    #                             'gg': '12'}
 
     with transaction.manager:
         session = DBSession()
@@ -131,7 +140,6 @@ def main(argv=sys.argv):
             crs = [a for a in crs if a]
             if not crs:
                 continue
-            #contract = session.query(Contract).filter_by(name=contract_name).first()
             contract = crs[0].contract
             if not contract:
                 contract = Contract(name=opts['titolocommessa'])
