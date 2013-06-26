@@ -312,6 +312,15 @@ class Project(dublincore.DublinCore, Base):
     __acl__.allow('role:secretary', 'reports_all_entries_for_project')
     __acl__.allow('role:project_manager', 'reports_all_entries_for_project')
     __acl__.allow('role:internal_developer', 'reports_all_entries_for_project')
+    #contract
+    __acl__.allow('role:project_manager', 'view_contracts')
+    __acl__.allow('role:secretary', 'view_contracts')
+    __acl__.allow('role:internal_developer', 'view_contracts')
+    __acl__.allow('role:project_manager', 'add_contracts')
+    __acl__.allow('role:secretary', 'add_contracts')
+    #groups
+    __acl__.allow('role:project_manager', 'view_groups')
+    __acl__.allow('role:project_manager', 'add_groups')
 
     __tablename__ = 'projects'
 
