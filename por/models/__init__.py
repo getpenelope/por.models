@@ -18,10 +18,11 @@ class classproperty(object):
 from por.models.dashboard import Project, User, GlobalConfig, Role, OpenId,\
                                  PasswordResetToken, Application, CustomerRequest,\
                                  Estimation, Group, SavedQuery, Customer,\
-                                 Contract
+                                 Contract, KanbanBoard
 
 Project; User; GlobalConfig; PasswordResetToken; Role; SavedQuery
 Application; Customer; CustomerRequest; Group; OpenId; Estimation; Contract
+KanbanBoard
 
 from por.models.tp import TimeEntry; TimeEntry
 
