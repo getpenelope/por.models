@@ -194,6 +194,8 @@ class User(Principal):
 def user_email(mapper, connection, target):
     if target.email:
         target.email = target.email.lower().strip()
+        if not target.svn_login:
+            target.svn_login = target.email
 
 event.listen(User, "before_insert", user_email)
 event.listen(User, "before_update", user_email)
